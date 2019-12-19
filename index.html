@@ -6,7 +6,31 @@
     <link rel="stylesheet" type="text/css" href="styles/chat.css">
   </head>
   <body>
-    <ul id="messages"></ul>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <ul class="list-group">
+            <li id="challengeSentenceId" class='list-group-item list-group-item-primary' style='color: #2f5687;font-weight: bold;font-size: 32px;'>
+              Sentence
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="row">
+        Challengers
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <ul id="messages" class="list-group"></ul>
+        </div>
+      </div>
+
+
+      
+    </div>
+    
     <form action="">
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
@@ -46,18 +70,19 @@
         });
         
         socket.on('chat message', function(msg){
-          $('#messages').append($('<li>').text(msg.username + " : " + msg.msg));
+          $('#messages').append($('<li class="list-group-item">').text(msg.username + " : " + msg.msg));
           window.scrollTo(0, document.body.scrollHeight);
         });
         
         socket.on('challenge', function(msg){
-          $('#messages').append("<li style='color: #2f5687;font-weight: bold;font-size: 32px;'>" + msg + "</li>");
-          serverSentence = msg;
-          window.scrollTo(0, document.body.scrollHeight);
+          //$('#messages').append("<li class='list-group-item' style='color: #2f5687;font-weight: bold;font-size: 32px;'>" + msg + "</li>");
+          //serverSentence = msg;
+          //window.scrollTo(0, document.body.scrollHeight);
+          $('#challengeSentenceId').text(msg);
         });
         
         socket.on('welcome msg', function(user){
-          $('#messages').append("<li style='color: #008000;font-weight: bold;font-size: 17px;'>" + "" + user + " has joined the TYPING CHALLENGE ROOM</li>");
+          $('#messages').append("<li class='list-group-item list-group-item-success' style='color: #008000;font-weight: bold;font-size: 17px;'>" + "" + user + " has joined the TYPING CHALLENGE ROOM</li>");
           serverSentence = user;
           window.scrollTo(0, document.body.scrollHeight);
         });
