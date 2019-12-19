@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+      #messages { margin-bottom: 40px }
+    </style>
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+    var d;
+    var sendTime;
+    var serverSentence;
+    var username;
+    var socket;
+    
+    
+    function sendMsg(msg){
+        msgObj = {
+                msg : msg,
+                username : username
+        };
+        socket.emit('chat message', msgObj);
+    }    
+    
+      $(function () {
+          username = prompt("Please enter your name", "양세훈");
+          
+          socket = io();
+          socket.emit('challenge');
+          socket.emit('welcome msg', username);
+        
+        $('form').submit(function(){
+          sendMsg($('#m').val());
+
+          $('#m').val('');
+
+          d = new Date();
+          sendTime = d.getTime();
+
+          return false;
+        });
+        
+        socket.on('chat message', function(msg){
+          $('#messages').append($('<li>').text(msg.username + " : " + msg.msg));
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+        
+        socket.on('challenge', function(msg){
+          $('#messages').append("<li style='color: #2f5687;font-weight: bold;font-size: 32px;'>" + msg + "</li>");
+          serverSentence = msg;
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+        
+        socket.on('welcome msg', function(user){
+          $('#messages').append("<li style='color: #008000;font-weight: bold;font-size: 17px;'>" + "" + user + " has joined the TYPING CHALLENGE ROOM</li>");
+          serverSentence = user;
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+        
+        $('#m')[0].addEventListener("input", function(){
+          sendMsg($('#m').val());
+        });
+      });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  </body>
+</html>
