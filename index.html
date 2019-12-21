@@ -6,7 +6,13 @@
     <link rel="stylesheet" type="text/css" href="styles/chat.css">
   </head>
   <body>
+
     <div class="container">
+
+
+      <h1 style="text-align:center">Sentence</h1>
+
+
       <div id="challengeSentenceDiv" class="row">
         <div class="col-md-12">
           <ul class="list-group">
@@ -17,29 +23,40 @@
         </div>
       </div>
 
-      <div class="row" >
-        <form action="">
-          <input id="m" autocomplete="off" /><button>Enter</button>
-        </form>
-      </div>
+      <h1 style="text-align:center">Challengers</h1>
 
-      <div class="row" >
-        Challengers
-      </div>
 
-      <div class="row">
+      <div id="challengeMessageDiv" class="row">
         <div class="col-md-12">
-          <ul id="messages" class="list-group"></ul>
+          <ul id="challengeMessages" class="list-group"></ul>
         </div>
       </div>
 
+      <div class="row" >
+        <form id="challengeForm" action="">
+          <input id="challengeInput" autocomplete="off" /><button>Enter</button>
+        </form>
+      </div>
 
+
+      <h1 style="text-align:center">Chat</h1>
+
+
+      <div id="chatMessageDiv" class="row">
+        <div class="col-md-12">
+          <ul id="chatMessages" class="list-group"></ul>
+        </div>
+      </div>
+
+      <div class="row" >
+        <form id="chatForm" action="">
+          <input id="chatInput" autocomplete="off" /><button>Send</button>
+        </form>
+      </div>
       
     </div>
     
-    <form action="">
-      <input id="m" autocomplete="off" /><button>Send</button>
-    </form>
+
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
@@ -64,10 +81,10 @@
           socket.emit('challenge');
           socket.emit('welcome msg', username);
         
-        $('form').submit(function(){
-          sendMsg($('#m').val());
+        $('#challengeForm').submit(function(){
+          sendMsg($('#challengeInput').val());
 
-          $('#m').val('');
+          $('#challengeInput').val('');
 
           d = new Date();
           sendTime = d.getTime();
@@ -76,8 +93,15 @@
         });
         
         socket.on('chat message', function(msg){
-          $('#messages').append($('<li class="list-group-item">').text(msg.username + " : " + msg.msg));
-          window.scrollTo(0, document.body.scrollHeight);
+
+          var tmpId = msg.username + "chatID";
+
+          var myEle = document.getElementById(tmpId);
+          if(myEle){
+              $('#'+tmpId).text(msg.username + " : " + msg.msg);
+          } else {
+            $('#challengeMessages').append($('<li class="list-group-item" id=' + tmpId + '>').text(msg.username + " : " + msg.msg));
+          }
         });
         
         socket.on('challenge', function(msg){
@@ -88,13 +112,13 @@
         });
         
         socket.on('welcome msg', function(user){
-          $('#messages').append("<li class='list-group-item list-group-item-success' style='color: #008000;font-weight: bold;font-size: 17px;'>" + "" + user + " has joined the TYPING CHALLENGE ROOM</li>");
+          $('#chatMessages').append("<li class='list-group-item list-group-item-success' style='color: #008000;font-weight: bold;font-size: 17px;'>" + "" + user + " has joined the TYPING CHALLENGE ROOM</li>");
           serverSentence = user;
           window.scrollTo(0, document.body.scrollHeight);
         });
         
-        $('#m')[0].addEventListener("input", function(){
-          sendMsg($('#m').val());
+        $('#challengeInput')[0].addEventListener("input", function(){
+          sendMsg($('#challengeInput').val());
         });
       });
     </script>

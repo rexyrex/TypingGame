@@ -1,5 +1,5 @@
 {
-  "name": "typing game",
+  "name": "TypingGame",
   "version": "0.0.1",
   "description": "How fast can you type? Compete with others in this NodeJS game",
   "dependencies": {
