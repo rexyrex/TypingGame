@@ -10,20 +10,18 @@
     <div class="container">
 
 
-      <h1 style="text-align:center">Sentence</h1>
+      <h1 style="text-align:center">Sentences</h1>
 
 
       <div id="challengeSentenceDiv" class="row">
         <div class="col-md-12">
-          <ul class="list-group">
-            <li id="challengeSentenceId" class='list-group-item list-group-item-primary'>
-              Sentence
-            </li>
+          <ul id="challengeSentsUl" class="list-group">
+
           </ul>
         </div>
       </div>
 
-      <h1 style="text-align:center">Challengers</h1>
+      <h1 style="text-align:center">Players</h1>
 
 
       <div id="challengeMessageDiv" class="row">
@@ -65,60 +63,146 @@
       var serverSentence;
       var username;
       var socket;
-      
-      function sendMsg(msg){
+      var chatIndex=0;
+      var score=0;
+      var verified = false;
+
+      function sendChatMsg(msg){
           msgObj = {
-                  msg : msg,
+                  chatSent : msg,
                   username : username
           };
           socket.emit('chat message', msgObj);
+      }  
+      
+      function sendChallengeMsg(msg){
+          msgObj = {
+                  challengeSent : msg,
+                  username : username
+          };
+          socket.emit('challenge message', msgObj);
       }    
+
+      function submitChallengeMsg(msg){
+          msgObj = {
+                  challengeSent : msg,
+                  username : username
+          };
+          socket.emit('submit challenge message', msgObj);
+      }   
+
+      function populateChallengeSents(challengeSents){
+        for(var i=0; i<challengeSents.length; i++){
+          var tmpId = "challengeSentLi"+i;
+          var myEle = document.getElementById(tmpId);
+          if(myEle){
+              $('#'+tmpId).text(challengeSents[i]);
+              $('#'+tmpId).addClass('rexChallengeAnim');
+              $('#'+tmpId).on("animationend", function(){
+                $(this).removeClass('rexChallengeAnim');
+              });
+          } else {
+            $('#challengeSentsUl').append($('<li class="list-group-item list-group-item-primary unselectable rexChallengeAnim" id=' + tmpId + '>').text(challengeSents[i]));
+            $('#'+tmpId).on("animationend", function(){
+              $(this).removeClass('rexChallengeAnim');
+            });
+
+          }
+        }
+      } 
+
+      function updateScore(tUserName, tNewScore){
+        if(tUserName == username){
+          score = tNewScore;
+        }
+      }
+
+      function promptUsername(){
+        username = prompt("Enter your Name", "양세훈");
+        if(username.includes("<")){
+          username = "바보" + Math.round(Math.random()*1000);
+        }
+
+        socket.emit('check username', username);
+      }
     
       $(function () {
-          username = prompt("Please enter your name", "양세훈");
-          
-          socket = io();
-          socket.emit('challenge');
-          socket.emit('welcome msg', username);
+        socket = io();
+        promptUsername();
         
         $('#challengeForm').submit(function(){
-          sendMsg($('#challengeInput').val());
+          sendChallengeMsg($('#challengeInput').val());
+
+          submitChallengeMsg($('#challengeInput').val());
 
           $('#challengeInput').val('');
+          sendChallengeMsg("");
 
           d = new Date();
           sendTime = d.getTime();
 
           return false;
         });
-        
-        socket.on('chat message', function(msg){
 
+        $('#chatForm').submit(function(){
+          sendChatMsg($('#chatInput').val())
+          $('#chatInput').val('');
+          return false;
+        });
+
+        socket.on('init', function(msg){
+          if(!verified){
+            if(msg.canUse){
+            socket.emit('challenge init');
+            socket.emit('welcome msg', msg.username);
+            verified = true;
+          } else {
+            alert("이미 사용중인 아이디입니다");
+            promptUsername();
+          }
+          }
+
+        });
+        
+        socket.on('challenge message', function(msg){
           var tmpId = msg.username + "chatID";
 
-          var myEle = document.getElementById(tmpId);
+          var myEle = document.getElementById(tmpId); 
           if(myEle){
-              $('#'+tmpId).text(msg.username + " : " + msg.msg);
+              $('#'+tmpId).text(msg.username + "("+score+")"+" : " + msg.challengeSent);
           } else {
-            $('#challengeMessages').append($('<li class="list-group-item" id=' + tmpId + '>').text(msg.username + " : " + msg.msg));
+            $('#challengeMessages')
+            .append($('<li class="list-group-item" id=' + tmpId + '>')
+              .text(msg.username + "("+score+")"+" : " + msg.challengeSent));
           }
+        });
+
+        socket.on('chat message', function(msg){
+          chatIndex++;
+          var tmpId = "chatIndex"+chatIndex;
+          $('#chatMessages').append($('<li class="list-group-item" id=' + tmpId + '>').text(msg.username + " : " + msg.chatSent));
+          var element = document.getElementById(tmpId);
+          element.scrollIntoView();
+
         });
         
         socket.on('challenge', function(msg){
-          //$('#messages').append("<li class='list-group-item' style='color: #2f5687;font-weight: bold;font-size: 32px;'>" + msg + "</li>");
-          //serverSentence = msg;
-          //window.scrollTo(0, document.body.scrollHeight);
-          $('#challengeSentenceId').text(msg);
+          populateChallengeSents(msg.challengeSentences);
+          updateScore(msg.username, msg.newScore);
+        });
+
+        socket.on('challenge init', function(msg){
+          populateChallengeSents(msg.challengeSentences);
         });
         
         socket.on('welcome msg', function(user){
-          $('#chatMessages').append("<li class='list-group-item list-group-item-success' style='color: #008000;font-weight: bold;font-size: 17px;'>" + "" + user + " has joined the TYPING CHALLENGE ROOM</li>");
+          $('#chatMessages').append("<li class='list-group-item list-group-item-success' style='color: #008000;font-weight: bold;font-size: 17px;'>" + "" + user + " has joined</li>");
           serverSentence = user;
           window.scrollTo(0, document.body.scrollHeight);
         });
         
         $('#challengeInput')[0].addEventListener("input", function(){
-          sendMsg($('#challengeInput').val());
+          sendChallengeMsg($('#challengeInput').val());
         });
       });
     </script>
