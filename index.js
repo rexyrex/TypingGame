@@ -24,7 +24,6 @@ function checkMatchChallengeSent(checkStr){
       return i;
     }
   }
-
   return -1;
 }
 
@@ -45,6 +44,36 @@ function incScore(uName, incScore){
   }
 }
 
+function delUserBySocketId(socketId){
+  for(var i=0; i<users.length; i++){
+    if(users[i].socketId == socketId){
+      users.splice(i,1);
+      i--;
+      //users[i].score = -1;
+    }
+  }
+}
+
+function getUserBySocketId(socketId){
+  for(var i=0; i<users.length; i++){
+    if(users[i].socketId == socketId){
+      return users[i];
+    }
+  }
+}
+
+function pollUserInfo(){
+  setTimeout(function() {
+    console.log('poll user info : ' + users.length);
+    io.emit('poll user info', {
+      userList : users
+    });
+    pollUserInfo();
+  }, 500);
+}
+
+pollUserInfo();
+
 app.use(express.static(__dirname + '/public'));
 
 app.get('/', function(req, res){
@@ -59,7 +88,6 @@ io.on('connection', function(socket){
 
   socket.on('check username', function(uName){
     if(getScore(uName)==-1){
-      console.log("not in here");
       io.emit('init', {
         canUse : true,
         username : uName
@@ -99,6 +127,7 @@ io.on('connection', function(socket){
       challengeSentences[checkSentRes] = generateSentence();
       io.emit('challenge', {
         challengeSentences : challengeSentences,
+        sentenceIndex : checkSentRes,
         username : msg.username,
         newScore : getScore(msg.username)
       });
@@ -117,6 +146,11 @@ io.on('connection', function(socket){
       users : users
     });
   });
+
+  socket.on('challenge end', function(winner){
+
+  io.emit('challenge end', winner);
+});
   
   socket.on('welcome msg', function(username){
 
@@ -126,10 +160,19 @@ io.on('connection', function(socket){
 
     var userData = {
       username : username,
-      score : 0
+      score : 0,
+      socketId : `${socket.id}`
     }
     users.push(userData);
     io.emit('welcome msg', username);
+  });
+
+  socket.on('disconnect', () => {
+    var tUName = getUserBySocketId(`${socket.id}`);
+    console.log(tUName);
+    io.emit('exit msg', tUName.username);
+    delUserBySocketId(`${socket.id}`);
+    console.log(`Socket ${socket.id} disconnected.`);
   });
   
 });

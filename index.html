@@ -53,6 +53,24 @@
       </div>
       
     </div>
+
+    <div id="usersSideBar" class="sidenav">
+      <div>
+        <p>herro</p>
+        <div class="progress">
+          <div 
+          class="progress-bar progress-bar-striped progress-bar-animated" 
+          role="progressbar" aria-valuenow="75" aria-valuemin="0" 
+          aria-valuemax="100" style="width: 75%">75%</div>
+        </div>
+      </div>
+      
+      <a href="#">About</a>
+
+      <a href="#">Services</a>
+      <a href="#">Clients</a>
+      <a href="#">Contact</a>
+    </div>
     
 
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
@@ -66,6 +84,8 @@
       var chatIndex=0;
       var score=0;
       var verified = false;
+      var objectiveScore = 25;
+      var started = false;
 
       function sendChatMsg(msg){
           msgObj = {
@@ -91,25 +111,51 @@
           socket.emit('submit challenge message', msgObj);
       }   
 
-      function populateChallengeSents(challengeSents){
+      function populateChallengeSents(challengeSents, sentenceIndex){
         for(var i=0; i<challengeSents.length; i++){
-          var tmpId = "challengeSentLi"+i;
-          var myEle = document.getElementById(tmpId);
-          if(myEle){
-              $('#'+tmpId).text(challengeSents[i]);
-              $('#'+tmpId).addClass('rexChallengeAnim');
+          if(sentenceIndex == -1 || sentenceIndex == i){
+            var tmpId = "challengeSentLi"+i;
+            var myEle = document.getElementById(tmpId);
+            if(myEle){
+                $('#'+tmpId).text(challengeSents[i]);
+                $('#'+tmpId).addClass('rexChallengeAnim');
+                $('#'+tmpId).on("animationend", function(){
+                  $(this).removeClass('rexChallengeAnim');
+                });
+            } else {
+              $('#challengeSentsUl').append($('<li class="list-group-item list-group-item-primary unselectable rexChallengeAnim" id=' + tmpId + '>').text(challengeSents[i]));
               $('#'+tmpId).on("animationend", function(){
                 $(this).removeClass('rexChallengeAnim');
               });
-          } else {
-            $('#challengeSentsUl').append($('<li class="list-group-item list-group-item-primary unselectable rexChallengeAnim" id=' + tmpId + '>').text(challengeSents[i]));
-            $('#'+tmpId).on("animationend", function(){
-              $(this).removeClass('rexChallengeAnim');
-            });
-
+            }
           }
         }
       } 
+
+      function endCountdown(socket) {
+        $('#challengeSentsUl').empty();
+        socket.emit('challenge init');
+      }
+
+      function startCountDown(seconds, socket){
+        if(started){
+          return;
+        }
+        started = true;
+        function handleTimer(count, timer,socket) {
+        if(count === 0) {
+          clearInterval(timer);
+          endCountdown(socket);
+        } else {
+          $('#challengeSentsUl').append($('<li class="list-group-item list-group-item-primary unselectable rexChallengeAnim">').text(count));
+          seconds--;
+        }
+      }
+        console.log("starting countDown");
+        var timer = setInterval(function() { handleTimer(seconds, timer, socket); }, 1000);
+      }
+
+
 
       function updateScore(tUserName, tNewScore){
         if(tUserName == username){
@@ -153,13 +199,13 @@
         socket.on('init', function(msg){
           if(!verified){
             if(msg.canUse){
-            socket.emit('challenge init');
-            socket.emit('welcome msg', msg.username);
-            verified = true;
-          } else {
-            alert("이미 사용중인 아이디입니다");
-            promptUsername();
-          }
+              
+              socket.emit('welcome msg', msg.username);
+              verified = true;
+            } else {
+              alert("이미 사용중인 아이디입니다");
+              promptUsername();
+            }
           }
 
         });
@@ -178,27 +224,66 @@
         });
 
         socket.on('chat message', function(msg){
-          chatIndex++;
-          var tmpId = "chatIndex"+chatIndex;
-          $('#chatMessages').append($('<li class="list-group-item" id=' + tmpId + '>').text(msg.username + " : " + msg.chatSent));
-          var element = document.getElementById(tmpId);
-          element.scrollIntoView();
+          if(msg.chatSent=="!start"){
+            startCountDown(5, socket);
+          } else {
+            chatIndex++;
+            var tmpId = "chatIndex"+chatIndex;
+            $('#chatMessages').append($('<li class="list-group-item" id=' + tmpId + '>').text(msg.username + " : " + msg.chatSent));
+            var element = document.getElementById(tmpId);
+            element.scrollIntoView();
+          }
+          
 
         });
         
         socket.on('challenge', function(msg){
-          populateChallengeSents(msg.challengeSentences);
+          populateChallengeSents(msg.challengeSentences, msg.sentenceIndex);
           updateScore(msg.username, msg.newScore);
         });
 
         socket.on('challenge init', function(msg){
-          populateChallengeSents(msg.challengeSentences);
+          populateChallengeSents(msg.challengeSentences, -1);
+        });
+
+        socket.on('challenge end', function(winner){
+          var finishSentence = winner + " has won!";
+          var fss = [];
+          for(var i=0; i<5; i++){
+            fss.push(finishSentence);
+          }
+          populateChallengeSents(fss, -1);
         });
         
         socket.on('welcome msg', function(user){
           $('#chatMessages').append("<li class='list-group-item list-group-item-success' style='color: #008000;font-weight: bold;font-size: 17px;'>" + "" + user + " has joined</li>");
-          serverSentence = user;
-          window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        socket.on('exit msg', function(user){
+          $('#chatMessages').append("<li class='list-group-item list-group-item-danger' style='color: #008000;font-weight: bold;font-size: 17px;'>" + "" + user + " has left</li>");
+        });
+
+        socket.on('poll user info', function(data){
+          $('#usersSideBar').empty();
+          for(var i=0; i<data.userList.length; i++){
+            if(data.userList[i].score >= 0){
+              var progressVal = Math.floor(data.userList[i].score / objectiveScore * 100);
+            $('#usersSideBar').append("<p>" + data.userList[i].username + "</p>");
+            $('#usersSideBar').append(`
+              <div class="progress">
+                <div 
+                class="progress-bar progress-bar-striped progress-bar-animated" 
+                role="progressbar" aria-valuenow="` + progressVal +`" aria-valuemin="0" 
+                aria-valuemax="100" style="color:red; width: `+progressVal+`%">`+data.userList[i].score + "/" + objectiveScore+`</div>
+              </div>
+              `);
+              if(progressVal==100){
+                socket.emit('challenge end', data.userList[i].username);
+              }
+            }
+
+
+          }          
         });
         
         $('#challengeInput')[0].addEventListener("input", function(){
