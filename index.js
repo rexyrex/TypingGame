@@ -1,5 +1,6 @@
 var express = require('express');
 var app = express();
+
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var port = process.env.PORT || 3000;
@@ -8,13 +9,24 @@ var challengeSentCount = 5;
 var challengeSentences = [];
 var users = [];
 
+function ri(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
+
 function generateSentence(){
-  const words = ["rex", "is", "running", "dex"];
-  const length = Math.floor(Math.random() * 8);
+  const pnouns = ["장주환 주임님", "김석주 주임님", "김민형", "양세훈","임희주 주임님","서영은 과장님","안상준 대리님", "박성호 소장님", "김광천 이사님", "한세훈 부장님"];
+  const nouns = ["감자","과자","사탕","낙타","컴퓨터","키보드","다람쥐","공룡","슬랙","핸드폰", "사진기","물컵", "모니터", "창고", "강아지", "고양이"]
+  const verbs = ["먹었다", "때렸다","째려봤다","걷어 찼다", "싫어한다", "좋아한다", "혐오한다", "공격했다", "돌려버렸다", "시도했다", "박살냈다", "싸대기 때렸다"]
+  const adjectives = ["맛있게", "힘차게", "겨우", "천천히", "멋있게", "예쁘게", "빠르게", "오지게", "뜨겁게", "이상하게", "귀엽게", "따끈하게","얄밉게"];
+
   var sent = ""
-  for(i = 0; i <length; i++)
-    sent += words[Math.floor(Math.random() * words.length)] + " ";
+  sent += pnouns[ri(pnouns.length)] + "은 " + nouns[ri(nouns.length)] +"을 " + adjectives[ri(adjectives.length)] + " " + verbs[ri(verbs.length)];
   sent += ".";
+
+  if(Math.random() < 0.2){
+    sent = "머징?";
+  }
+
   return sent;
 }
 

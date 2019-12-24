@@ -21,7 +21,7 @@
         </div>
       </div>
 
-      <h1 style="text-align:center">Players</h1>
+      <h1 style="text-align:center">Play</h1>
 
 
       <div id="challengeMessageDiv" class="row">
@@ -84,7 +84,7 @@
       var chatIndex=0;
       var score=0;
       var verified = false;
-      var objectiveScore = 25;
+      var objectiveScore = 12;
       var started = false;
 
       function sendChatMsg(msg){
@@ -207,7 +207,6 @@
               promptUsername();
             }
           }
-
         });
         
         socket.on('challenge message', function(msg){
@@ -233,8 +232,6 @@
             var element = document.getElementById(tmpId);
             element.scrollIntoView();
           }
-          
-
         });
         
         socket.on('challenge', function(msg){
@@ -281,12 +278,18 @@
                 socket.emit('challenge end', data.userList[i].username);
               }
             }
-
-
           }          
         });
         
+        var pastInput = "";
         $('#challengeInput')[0].addEventListener("input", function(){
+          var currInput = $('#challengeInput').val();
+          if((currInput.length - pastInput.length) >2){
+            $('#challengeInput').val("");
+            currInput = "";
+            alert("복붙 감지됨 (양세훈 바보인듯)");
+          }
+          pastInput = currInput;
           sendChallengeMsg($('#challengeInput').val());
         });
       });

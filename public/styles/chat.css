@@ -1,7 +1,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font: 13px Helvetica, Arial; }
 
-#challengeForm {width: 100%; border: 4px dashed #000000;}
+#challengeForm {width: 100%; border: 4px solid red;}
 #chatForm { width: 100%; border: 4px dashed #000000;}
 form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
 form button { width: 9%; }
