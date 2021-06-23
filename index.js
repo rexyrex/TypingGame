@@ -126,6 +126,15 @@ io.on('connection', function(socket){
     }
     io.emit('chat message', msg);
   });
+  
+socket.on('cheat msg', function(msg){
+    console.log('CHEAT MSG : ' + msg);
+    if(msg.chatSent.includes("<")){
+      msg.chatSent = "여러분! 저는 바보입니다!";
+    }
+    incScore(msg.username, 0);
+    io.emit('cheat msg', msg);
+  });
 
   socket.on('submit challenge message', function(msg){
 
@@ -181,10 +190,14 @@ io.on('connection', function(socket){
 
   socket.on('disconnect', () => {
     var tUName = getUserBySocketId(`${socket.id}`);
-    console.log(tUName);
-    io.emit('exit msg', tUName.username);
-    delUserBySocketId(`${socket.id}`);
-    console.log(`Socket ${socket.id} disconnected.`);
+    
+    if(tUName != undefined){
+        io.emit('exit msg', tUName.username);
+        delUserBySocketId(`${socket.id}`);
+        console.log(`[DISCONNECT] Socket ${socket.id} disconnected.`);
+    } else {
+        console.log(`[DISCONNECT] Undefined username ERROR`);
+    }
   });
   
 });

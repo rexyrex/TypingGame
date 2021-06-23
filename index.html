@@ -21,7 +21,7 @@
         </div>
       </div>
 
-      <h1 style="text-align:center">Play</h1>
+      <h1 style="text-align:center">현재 치고있는 문장</h1>
 
 
       <div id="challengeMessageDiv" class="row">
@@ -37,7 +37,7 @@
       </div>
 
 
-      <h1 style="text-align:center">Chat</h1>
+      <h1 style="text-align:center">채팅</h1>
 
 
       <div id="chatMessageDiv" class="row">
@@ -84,8 +84,9 @@
       var chatIndex=0;
       var score=0;
       var verified = false;
-      var objectiveScore = 12;
+      var objectiveScore = 10;
       var started = false;
+      var lastChallengeSentLength = 0;
 
       function sendChatMsg(msg){
           msgObj = {
@@ -164,7 +165,7 @@
       }
 
       function promptUsername(){
-        username = prompt("Enter your Name", "양세훈");
+        username = prompt("Enter your Name", "렉스");
         if(username.includes("<")){
           username = "바보" + Math.round(Math.random()*1000);
         }
@@ -177,15 +178,36 @@
         promptUsername();
         
         $('#challengeForm').submit(function(){
+        
+          if(Math.abs($('#challengeInput').val().length - lastChallengeSentLength) > 1){
+            var laughstr = "ㅋ";
+            
+            for(var z = 0; z< 100; z++){
+                console.log("해킹 할 시간에 타자 연습 하세요 " + laughstr);
+                laughstr += "ㅋ";
+            }
+            
+          var msgObj = {
+                  chatSent : '저는 바보처럼 해킹을 시도했다가 실패했습니다 :(',
+                  username : username
+          };
+            
+            socket.emit('cheat msg', msgObj);
+            
+            $('#challengeInput').val('');
+            lastChallengeSentLength = 0;
+            return false;
+          }
+        
           sendChallengeMsg($('#challengeInput').val());
-
-          submitChallengeMsg($('#challengeInput').val());
+          submitChallengeMsg($('#challengeInput').val());  
 
           $('#challengeInput').val('');
           sendChallengeMsg("");
 
           d = new Date();
           sendTime = d.getTime();
+          lastChallengeSentLength = 0;
 
           return false;
         });
@@ -259,6 +281,11 @@
         socket.on('exit msg', function(user){
           $('#chatMessages').append("<li class='list-group-item list-group-item-danger' style='color: #008000;font-weight: bold;font-size: 17px;'>" + "" + user + " has left</li>");
         });
+        
+        socket.on('cheat msg', function(msg){
+        updateScore(msg.username, 0);
+          $('#chatMessages').append("<li class='list-group-item list-group-item-warning' style='color: #008000;font-weight: bold;font-size: 17px;'>" + "" + msg.username + "님이 바보 처럼 해킹 시도했다가 실패했습니다... 점수 리셋 시켜줄게요. 반성하세요 ^^</li>");
+        });
 
         socket.on('poll user info', function(data){
           $('#usersSideBar').empty();
@@ -290,6 +317,7 @@
             alert("복붙 감지됨 (양세훈 바보인듯)");
           }
           pastInput = currInput;
+          lastChallengeSentLength = pastInput.length;
           sendChallengeMsg($('#challengeInput').val());
         });
       });
