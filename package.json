@@ -4,7 +4,7 @@
   "description": "How fast can you type? Compete with others in this NodeJS game",
   "dependencies": {
     "express": "^4.15.2",
-    "socket.io": "^2.4.0",
+    "socket.io": "^2.5.0",
     "uuid4": "^1.1.4"
   },
   "scripts": {
