@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "description": "How fast can you type? Compete with others in this NodeJS game",
   "dependencies": {
-    "express": "^4.15.2",
-    "socket.io": "^2.4.0",
+    "express": "^4.22.3",
+    "socket.io": "^4.8.4",
     "uuid4": "^1.1.4"
   },
   "scripts": {
